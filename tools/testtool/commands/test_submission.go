@@ -131,21 +131,17 @@ func copyDir(src, dst string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if err := cmd.Start(); err != nil {
-		log.Fatalf("error starting rsync command: %s", err)
-	}
-
-	if err := cmd.Wait(); err != nil {
-		log.Fatalf("rsync command failed: %s", err)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("directory copying failed: %s", err)
 	}
 }
 
-// copyDir recursively copies src contents to dst.
+// copyContents recursively copies src contents to dst.
 func copyContents(src, dst string) {
 	copyDir(src+"/", dst)
 }
 
-// Copy files preserving directory structure relative to baseDir.
+// copyFiles copies files preserving directory structure relative to baseDir.
 //
 // Existing files get replaced.
 func copyFiles(baseDir string, relPaths []string, dst string) {
@@ -155,17 +151,13 @@ func copyFiles(baseDir string, relPaths []string, dst string) {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
-		if err := cmd.Start(); err != nil {
-			log.Fatalf("error starting file copying: %s", err)
-		}
-
-		if err := cmd.Wait(); err != nil {
+		if err := cmd.Run(); err != nil {
 			log.Fatalf("file copying failed: %s", err)
 		}
 	}
 }
 
-// Run all test in directory with race detector.
+// runTests runs all tests in directory with race detector.
 func runTests(testDir string) {
 	cmd := exec.Command("go", "test", "-v", "-mod", "readonly", "-tags", "private", "-race", "./...")
 	cmd.Env = append(os.Environ(), "GOFLAGS=")
@@ -173,16 +165,12 @@ func runTests(testDir string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if err := cmd.Start(); err != nil {
-		log.Fatalf("error starting go test command: %s", err)
-	}
-
-	if err := cmd.Wait(); err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("go test command failed: %s", err)
 	}
 }
 
-// Get absolute paths for all files in rootPackage and it's subpackages
+// getPackageFiles returns absolute paths for all files in rootPackage and it's subpackages
 // including tests and non-go files.
 func getPackageFiles(rootPackage string, buildFlags []string) map[string]struct{} {
 	cfg := &packages.Config{
@@ -213,7 +201,7 @@ func getPackageFiles(rootPackage string, buildFlags []string) map[string]struct{
 	return files
 }
 
-// Convert paths to relative (to the baseDir) ones.
+// relPaths converts paths to relative (to the baseDir) ones.
 func relPaths(baseDir string, paths []string) []string {
 	ret := make([]string, len(paths))
 	for i, p := range paths {
