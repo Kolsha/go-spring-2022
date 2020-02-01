@@ -15,8 +15,14 @@ var exportCmd = &cobra.Command{
 	Run:   exportCode,
 }
 
+var (
+	flagPush bool
+)
+
 func init() {
 	rootCmd.AddCommand(exportCmd)
+
+	exportCmd.Flags().BoolVar(&flagPush, "push", false, "push to public repo")
 }
 
 func git(args ...string) {
@@ -44,8 +50,14 @@ func exportCode(cmd *cobra.Command, args []string) {
 	}
 
 	git("checkout", "public")
-	git("add", "-A")
-	git("commit", "-m", "export public files")
 	git("branch", "-D", "temp")
+
+	git("add", "-A")
+	git("commit", "-m", "export public files", "--allow-empty")
+
+	if flagPush {
+		git("push", "public", "public:master")
+	}
+
 	git("checkout", "master")
 }
