@@ -9,6 +9,11 @@ import (
 )
 
 func TestFormat(t *testing.T) {
+	s := make([]interface{}, 1002)
+	s[10] = 1
+	s[100] = 2
+	s[1000] = 3
+
 	for _, tc := range []struct {
 		format string
 		args   []interface{}
@@ -43,6 +48,21 @@ func TestFormat(t *testing.T) {
 			format: "Hello, {2}",
 			args:   []interface{}{0, 1, "World"},
 			result: "Hello, World",
+		},
+		{
+			format: "{10}",
+			args:   s[:11],
+			result: "1",
+		},
+		{
+			format: "{100}",
+			args:   s[:101],
+			result: "2",
+		},
+		{
+			format: "{1000}",
+			args:   s[:1001],
+			result: "3",
 		},
 	} {
 		t.Run(tc.result, func(t *testing.T) {
