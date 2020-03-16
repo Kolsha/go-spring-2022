@@ -25,24 +25,24 @@ func TestKeyLock_Simple(t *testing.T) {
 
 	l := keylock.New()
 
-	locked, unlock := l.LockKeys([]string{"a", "b"}, nil)
-	require.True(t, locked)
+	canceled, unlock := l.LockKeys([]string{"a", "b"}, nil)
+	require.False(t, canceled)
 
-	locked, _ = l.LockKeys([]string{"", "b", "c"}, timeout(time.Millisecond*10))
-	require.False(t, locked)
+	canceled, _ = l.LockKeys([]string{"", "b", "c"}, timeout(time.Millisecond*10))
+	require.True(t, canceled)
 
 	unlock()
 
-	locked, _ = l.LockKeys([]string{"", "b", "c"}, nil)
-	require.True(t, locked)
+	canceled, _ = l.LockKeys([]string{"", "b", "c"}, nil)
+	require.False(t, canceled)
 }
 
 func TestKeyLock_Progress(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	l := keylock.New()
 
-	locked, unlock := l.LockKeys([]string{"a", "b"}, nil)
-	require.True(t, locked)
+	canceled, unlock := l.LockKeys([]string{"a", "b"}, nil)
+	require.False(t, canceled)
 	defer unlock()
 
 	go func() {
@@ -50,8 +50,8 @@ func TestKeyLock_Progress(t *testing.T) {
 	}()
 
 	time.Sleep(time.Millisecond * 10)
-	locked, _ = l.LockKeys([]string{"d"}, nil)
-	require.True(t, locked)
+	canceled, _ = l.LockKeys([]string{"d"}, nil)
+	require.False(t, canceled)
 }
 
 func TestKeyLock_DeadlockFree(t *testing.T) {
@@ -67,8 +67,8 @@ func TestKeyLock_DeadlockFree(t *testing.T) {
 		defer wg.Done()
 
 		for i := 0; i < N; i++ {
-			locked, unlock := l.LockKeys(keys, nil)
-			if !locked {
+			cancelled, unlock := l.LockKeys(keys, nil)
+			if cancelled {
 				t.Error("spurious lock failure")
 				return
 			}
@@ -100,8 +100,8 @@ func TestKeyLock_SingleKeyStress(t *testing.T) {
 			defer wg.Done()
 
 			for i := 0; i < N; i++ {
-				locked, unlock := l.LockKeys([]string{"a"}, timeout(time.Millisecond))
-				if locked {
+				cancelled, unlock := l.LockKeys([]string{"a"}, timeout(time.Millisecond))
+				if !cancelled {
 					unlock()
 				}
 			}
