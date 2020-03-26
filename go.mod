@@ -15,4 +15,5 @@ require (
 	golang.org/x/perf v0.0.0-20191209155426-36b577b0eb03
 	golang.org/x/tools v0.0.0-20200125223703-d33eef8e6825
 	gopkg.in/yaml.v2 v2.2.8
+	gopl.io v0.0.0-20200323155855-65c318dde95e
 )
