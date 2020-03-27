@@ -2,6 +2,7 @@ package lrucache
 
 import (
 	"math/rand"
+	"runtime/debug"
 	"sort"
 	"testing"
 
@@ -130,6 +131,11 @@ func TestCache_eviction(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCache_GCPercent(t *testing.T) {
+	var p = debug.SetGCPercent(100)
+	require.Equal(t, p, 100)
 }
 
 func BenchmarkCache_Set(b *testing.B) {
