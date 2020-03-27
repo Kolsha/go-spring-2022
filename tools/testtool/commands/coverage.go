@@ -18,8 +18,9 @@ import (
 const coverageCommentPrefix = "min coverage: "
 
 type CoverageRequirements struct {
-	Enabled bool
-	Percent float64
+	Enabled  bool
+	Percent  float64
+	Packages []string
 }
 
 // getCoverageRequirements searches for comment in test files
@@ -58,33 +59,80 @@ func searchCoverageComment(fname string) (*CoverageRequirements, error) {
 		}
 		t = strings.TrimPrefix(t, coverageCommentPrefix)
 		t = strings.TrimSuffix(t, "%\n")
-		percent, err := strconv.ParseFloat(t, 64)
+
+		parts := strings.Split(t, " ")
+		if len(parts) != 2 {
+			continue
+		}
+
+		percent, err := strconv.ParseFloat(parts[1], 64)
 		if err != nil {
 			continue
 		}
 		if percent < 0 || percent > 100.0 {
 			continue
 		}
-		return &CoverageRequirements{Enabled: true, Percent: percent}, nil
+
+		return &CoverageRequirements{
+			Enabled:  true,
+			Percent:  percent,
+			Packages: strings.Split(parts[0], ","),
+		}, nil
 	}
 
 	return &CoverageRequirements{}, nil
 }
 
-// calCoverage calculates coverage percent for given coverage profile.
-func calCoverage(profile string) (float64, error) {
-	profiles, err := cover.ParseProfiles(profile)
+// calCoverage calculates coverage percent of code blocks recorded in targetProfile
+// by given coverage profiles.
+func calCoverage(targetProfile string, fileNames []string) (float64, error) {
+	type key struct {
+		fileName            string
+		startLine, startCol int
+		endLine, endCol     int
+		numStmt             int
+	}
+	newKey := func(p *cover.Profile, b cover.ProfileBlock) key {
+		return key{
+			p.FileName,
+			b.StartLine, b.StartCol,
+			b.EndLine, b.EndCol,
+			b.NumStmt,
+		}
+	}
+
+	executed := map[key]bool{}
+	targetProfiles, err := cover.ParseProfiles(targetProfile)
 	if err != nil {
-		return 0.0, fmt.Errorf("cannot parse coverage profile file %s: %w", profile, err)
+		return 0.0, fmt.Errorf("cannot parse target profile %s: %w", targetProfile, err)
+	}
+	for _, p := range targetProfiles {
+		for _, b := range p.Blocks {
+			executed[newKey(p, b)] = false
+		}
+	}
+
+	for _, f := range fileNames {
+		profiles, err := cover.ParseProfiles(f)
+		if err != nil {
+			return 0.0, fmt.Errorf("cannot parse coverage profile file %s: %w", f, err)
+		}
+
+		for _, p := range profiles {
+			for _, b := range p.Blocks {
+				k := newKey(p, b)
+				if _, ok := executed[k]; ok && b.Count > 0 {
+					executed[k] = true
+				}
+			}
+		}
 	}
 
 	var total, covered int
-	for _, p := range profiles {
-		for _, block := range p.Blocks {
-			total += block.NumStmt
-			if block.Count > 0 {
-				covered += block.NumStmt
-			}
+	for k, e := range executed {
+		total += k.numStmt
+		if e {
+			covered += k.numStmt
 		}
 	}
 
