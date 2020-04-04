@@ -223,20 +223,7 @@ rules:
 			expected: result{code: http.StatusForbidden, body: "Forbidden"},
 		},
 		{
-			name: "bad-status-code",
-			conf: `
-rules:
-  - endpoint: "/"
-    forbidden_response_codes: [200]
-`,
-			service: echoService,
-			makeRequest: func() *resty.Request {
-				return c.R().SetBody("hello")
-			},
-			expected: result{code: http.StatusForbidden, body: "Forbidden"},
-		},
-		{
-			name: "bad-response",
+			name: "bad-request",
 			conf: `
 rules:
   - endpoint: "/"
