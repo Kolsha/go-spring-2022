@@ -12,9 +12,11 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/jonboulle/clockwork v0.1.0
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/goleak v1.0.0
+	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
 	golang.org/x/perf v0.0.0-20191209155426-36b577b0eb03
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
