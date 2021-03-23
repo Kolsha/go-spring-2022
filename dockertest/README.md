@@ -21,7 +21,10 @@ https://docs.docker.com/engine/install/
 Чтобы использовать docker cli без sudo, нужно добавить себя в эту группу:
 ```
 sudo groupadd docker
+sudo usermod -aG docker $USER
 ```
+После этого разлогиньтесь из os и залогиньтесь заново (или перезапустите систему).
+
 Для проверки можно запустить
 ```
 docker run hello-world
