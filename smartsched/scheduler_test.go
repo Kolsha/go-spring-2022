@@ -30,6 +30,7 @@ var (
 type testScheduler struct {
 	*scheduler.Scheduler
 	clockwork.FakeClock
+	reset chan struct{}
 }
 
 func newTestScheduler(t *testing.T) *testScheduler {
@@ -38,14 +39,25 @@ func newTestScheduler(t *testing.T) *testScheduler {
 	s := &testScheduler{
 		FakeClock: clockwork.NewFakeClock(),
 		Scheduler: scheduler.NewScheduler(log, config),
+		reset:     make(chan struct{}),
 	}
 
-	*scheduler.TimeAfter = s.FakeClock.After
+	go func() {
+		select {
+		case <-time.After(time.Second * 5):
+			panic("test hang")
+		case <-s.reset:
+			return
+		}
+	}()
+
+	scheduler.TimeAfter = s.FakeClock.After
 	return s
 }
 
 func (s *testScheduler) stop(t *testing.T) {
-	*scheduler.TimeAfter = time.After
+	close(s.reset)
+	scheduler.TimeAfter = time.After
 	goleak.VerifyNone(t)
 }
 
