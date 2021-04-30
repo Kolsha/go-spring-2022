@@ -97,7 +97,6 @@ func testSubmission(studentRepo, privateRepo, problem string) error {
 	if err := os.Chmod(tmpRepo, 0755); err != nil {
 		log.Fatal(err)
 	}
-
 	defer func() { _ = os.RemoveAll(tmpRepo) }()
 	log.Printf("testing submission in %s", tmpRepo)
 
@@ -214,7 +213,16 @@ func runTests(testDir, privateRepo, problem string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := os.Chmod(binCache, 0755); err != nil {
+	if err = os.Chmod(binCache, 0755); err != nil {
+		log.Fatal(err)
+	}
+
+	var goCache string
+	goCache, err = ioutil.TempDir("/tmp", "gocache")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = os.Chmod(goCache, 0777); err != nil {
 		log.Fatal(err)
 	}
 
@@ -287,6 +295,7 @@ func runTests(testDir, privateRepo, problem string) error {
 				testtool.BinariesEnv + "=" + string(binariesJSON),
 				"PATH=" + os.Getenv("PATH"),
 				"HOME=" + os.Getenv("HOME"),
+				"GOCACHE=" + goCache,
 			}
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -311,6 +320,7 @@ func runTests(testDir, privateRepo, problem string) error {
 				testtool.BinariesEnv + "=" + string(binariesJSON),
 				"PATH=" + os.Getenv("PATH"),
 				"HOME=" + os.Getenv("HOME"),
+				"GOCACHE=" + goCache,
 			}
 			benchCmd.Stdout = &buf
 			benchCmd.Stderr = os.Stderr
