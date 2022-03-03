@@ -15,7 +15,7 @@ type reader struct {
 func (r reader) Read(p []byte) (n int, err error) {
 	n, err = r.r.Read(p)
 	rng := make([]byte, n)
-	r.prng.Read(rng)
+	_, _ = r.prng.Read(rng)
 	for i := 0; i < n; i++ {
 		p[i] = p[i] ^ rng[i]
 	}
@@ -34,7 +34,7 @@ type writer struct {
 
 func (w writer) Write(p []byte) (n int, err error) {
 	rng := make([]byte, len(p))
-	w.prng.Read(rng)
+	_, _ = w.prng.Read(rng)
 
 	for i := 0; i < len(p); i++ {
 		rng[i] = rng[i] ^ p[i]
