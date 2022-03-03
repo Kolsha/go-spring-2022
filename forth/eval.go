@@ -25,9 +25,10 @@ func NewEvaluator() *Evaluator {
 // Returns resulting stack state and an error.
 func (e *Evaluator) Process(row string) ([]int, error) {
 	var opErr error
+	row = strings.ToLower(row)
 	ops := strings.Split(row, " ")
 	for len(ops) > 0 {
-		word := strings.ToLower(ops[0])
+		word := ops[0]
 		ops = ops[1:]
 		if opErr != nil {
 			break
@@ -83,7 +84,7 @@ func (e *Evaluator) Process(row string) ([]int, error) {
 func (e *Evaluator) userDefined(ops []string) ([]string, error) {
 	name := ""
 	for len(name) == 0 && len(ops) > 0 {
-		name = strings.ToLower(ops[0])
+		name = ops[0]
 		ops = ops[1:]
 	}
 
@@ -97,7 +98,7 @@ func (e *Evaluator) userDefined(ops []string) ([]string, error) {
 
 	command := ""
 	for len(ops) > 0 && ops[0] != ";" {
-		o := strings.ToLower(ops[0])
+		o := ops[0]
 		if cmd, ok := e.words[o]; ok {
 			o = cmd
 		}
