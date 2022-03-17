@@ -9,12 +9,19 @@ package waitgroup
 // runs and calls Done when finished. At the same time,
 // Wait can be used to block until all goroutines have finished.
 type WaitGroup struct {
-	run chan struct{}
+	run   chan struct{}
+	mux   chan struct{}
+	count int
 }
 
 // New creates WaitGroup.
 func New() *WaitGroup {
-	wg := &WaitGroup{run: make(chan struct{}, 100)}
+	wg := &WaitGroup{
+		run:   make(chan struct{}, 0),
+		mux:   make(chan struct{}, 1),
+		count: 0,
+	}
+
 	return wg
 }
 
@@ -32,32 +39,38 @@ func New() *WaitGroup {
 // new Add calls must happen after all previous Wait calls have returned.
 // See the WaitGroup example.
 func (wg *WaitGroup) Add(delta int) {
-	for delta != 0 {
-		if delta > 0 {
-			wg.run <- struct{}{}
-			delta--
-		} else {
-			wg.checkLen()
-			<-wg.run
-			delta++
-		}
-	}
+	defer wg.unlock()
+	wg.lock()
+
+	wg.count += delta
+	wg.checkCounter()
 }
 
 // Done decrements the WaitGroup counter by one.
 func (wg *WaitGroup) Done() {
-	wg.checkLen()
-	<-wg.run
+	wg.Add(-1)
+	if wg.count == 0 {
+		close(wg.run)
+		wg.run = make(chan struct{}, 0)
+	}
+
 }
 
 // Wait blocks until the WaitGroup counter is zero.
 func (wg *WaitGroup) Wait() {
-	for len(wg.run) != 0 {
+	<-wg.run
+}
+
+func (wg *WaitGroup) checkCounter() {
+	if wg.count < 0 {
+		panic("negative WaitGroup counter")
 	}
 }
 
-func (wg *WaitGroup) checkLen() {
-	if len(wg.run) < 1 {
-		panic("negative WaitGroup counter")
-	}
+func (wg *WaitGroup) lock() {
+	wg.mux <- struct{}{}
+}
+
+func (wg *WaitGroup) unlock() {
+	<-wg.mux
 }
