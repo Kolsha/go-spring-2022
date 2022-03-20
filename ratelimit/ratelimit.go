@@ -57,7 +57,7 @@ func (l *Limiter) Acquire(ctx context.Context) error {
 		now := time.Now()
 		if d := tm.Sub(now); d > 0 {
 			select {
-			case <-time.After(d):
+			case <-time.After(d - 200*time.Millisecond):
 			case <-l.stop:
 				return ErrStopped
 			case <-ctx.Done():
@@ -66,7 +66,7 @@ func (l *Limiter) Acquire(ctx context.Context) error {
 		}
 
 		select {
-		case l.buckets <- time.Now().Add(l.interval - 200*time.Millisecond):
+		case l.buckets <- time.Now().Add(l.interval):
 		case <-l.stop:
 			return ErrStopped
 		case <-ctx.Done():
