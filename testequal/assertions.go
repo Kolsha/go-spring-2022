@@ -4,18 +4,35 @@
 package testequal
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 )
 
 func equal(expected, actual interface{}) bool {
+	if expected == nil || actual == nil {
+		return expected == actual
+	}
 	if reflect.ValueOf(expected).Kind() == reflect.Struct {
 		return false
 	}
 	if reflect.ValueOf(actual).Kind() == reflect.Struct {
 		return false
 	}
-	return reflect.DeepEqual(expected, actual)
+
+	exp, ok := expected.([]byte)
+	if !ok {
+		return reflect.DeepEqual(expected, actual)
+	}
+
+	act, ok := actual.([]byte)
+	if !ok {
+		return false
+	}
+	if exp == nil || act == nil {
+		return exp == nil && act == nil
+	}
+	return bytes.Equal(exp, act)
 }
 
 func errorf(t T, expected, actual interface{}, msgAndArgs ...interface{}) {
