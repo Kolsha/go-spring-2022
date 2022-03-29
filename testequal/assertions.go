@@ -13,11 +13,31 @@ func equal(expected, actual interface{}) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
-	if reflect.ValueOf(expected).Kind() == reflect.Struct {
+	switch v := expected.(type) {
+	case uint, int, uint8, int8, uint16, int16, uint64, int64:
+		return v == actual
+	case struct{}:
 		return false
-	}
-	if reflect.ValueOf(actual).Kind() == reflect.Struct {
-		return false
+	case map[string]string:
+		a, ok := actual.(map[string]string)
+		if !ok {
+			return false
+		}
+		if len(v) != len(a) {
+			return false
+		}
+		if len(a) == 0 {
+			return false
+		}
+
+		for key, val := range v {
+			aval, ok := a[key]
+			if !ok || val != aval {
+				return false
+			}
+		}
+
+		return true
 	}
 
 	exp, ok := expected.([]byte)
