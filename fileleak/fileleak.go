@@ -4,6 +4,7 @@
 package fileleak
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"reflect"
@@ -14,17 +15,12 @@ type testingT interface {
 	Cleanup(func())
 }
 
-func getOpenedFileNames() []string {
+func getOpenedFileNames() []fs.FileInfo {
 	files, err := ioutil.ReadDir("/proc/self/fd")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	names := make([]string, 0, len(files))
-	for _, file := range files {
-		names = append(names, file.Name())
-	}
-	return names
+	return files
 }
 
 func VerifyNone(t testingT) {
