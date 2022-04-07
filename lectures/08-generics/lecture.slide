@@ -234,7 +234,7 @@ what we could do
 
 * Type inference
 
-- Type intefence is complicated but usage is simple
+- Type inference is complicated but usage is simple
 - Programms that don't need type arguments today won't need them tomorrow
 
 * Scale
@@ -243,7 +243,7 @@ what we could do
 
   func (p Point) String() string { return "" }
 
-We'd like to write function scale and Println
+We'd like to write function ScaleAndPrint
 
   func ScaleAndPrint(p Point) {
   	r := Scale(p, 2)
