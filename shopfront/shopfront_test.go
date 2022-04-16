@@ -13,6 +13,7 @@ func TestShopfront(t *testing.T) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: StartRedis(t),
 	})
+	defer func() { _ = rdb.Close() }()
 
 	ctx := context.Background()
 
@@ -20,12 +21,12 @@ func TestShopfront(t *testing.T) {
 
 	items, err := c.GetItems(ctx, []shopfront.ItemID{1, 2, 3, 4}, 42)
 	require.NoError(t, err)
-	require.Equal(t, items, []shopfront.Item{
+	require.Equal(t, []shopfront.Item{
 		{},
 		{},
 		{},
 		{},
-	})
+	}, items)
 
 	require.NoError(t, c.RecordView(ctx, 3, 42))
 	require.NoError(t, c.RecordView(ctx, 2, 42))
@@ -34,12 +35,12 @@ func TestShopfront(t *testing.T) {
 
 	items, err = c.GetItems(ctx, []shopfront.ItemID{1, 2, 3, 4}, 42)
 	require.NoError(t, err)
-	require.Equal(t, items, []shopfront.Item{
+	require.Equal(t, []shopfront.Item{
 		{},
 		{ViewCount: 2, Viewed: true},
 		{ViewCount: 1, Viewed: true},
 		{},
-	})
+	}, items)
 }
 
 func BenchmarkShopfront(b *testing.B) {
@@ -48,6 +49,7 @@ func BenchmarkShopfront(b *testing.B) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: StartRedis(b),
 	})
+	defer func() { _ = rdb.Close() }()
 
 	ctx := context.Background()
 	c := shopfront.New(rdb)
