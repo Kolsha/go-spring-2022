@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +17,7 @@ func main() {
 
 func readFileHandler(w http.ResponseWriter, r *http.Request) {
 	filename := r.URL.Query().Get("file")
-	data, _ := ioutil.ReadFile(filename)
+	data, _ := os.ReadFile(filename)
 
 	// Infer the Content-Type of the file.
 	contentType := http.DetectContentType(data[:512])
@@ -40,8 +39,7 @@ func copyHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = f.Close() }()
 
 	// Infer the Content-Type of the file.
-	filePrefix := make([]byte, 1024)
-	_, _ = io.ReadAtLeast(f, filePrefix, 512)
+	filePrefix, _ := io.ReadAll(io.LimitReader(f, 512))
 	contentType := http.DetectContentType(filePrefix)
 
 	// Get the file size.
